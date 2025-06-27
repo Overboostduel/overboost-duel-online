@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Overboost Duel - Online Deck</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1em;
+      text-align: center;
+    }
+    .card {
+      width: 80vw;
+      max-width: 300px;
+      height: 50vh;
+      max-height: 400px;
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.5s ease, opacity 0.5s ease;
+    }
+    .card.swipe {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    .card-title {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+    .card-image {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 10px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #555;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Overboost Duel - Online Deck</h1>
+    <div id="welcomeSection">
+    <div class="card">
+      <div class="card-title">Welcome to Overboost Duel</div>
+      <div class="card-description">Press "Start Game" to begin.</div>
+    </div>
+    <button id="startButton">Start Game</button>
+  </div>
+
+  <div id="gameSection" class="hidden">
+    <div class="card" id="deckCard">
+      <img id="cardImage" class="card-image" src="" alt="Card Icon">
+      <div class="card-title" id="cardTitle">Draw a Card</div>
+      <div class="card-description" id="cardDescription">Press "Next Card" to start</div>
+    </div>
+    <button id="nextButton">Next Card</button>
+  </div>
+
+  <script>
+    const cards = {
+      challenges: [
+        { title: 'HORSEPOWER', description: 'Compare horsepower. Highest value wins.', icon: 'horsepower.png' },
+        { title: 'PRACTICALITY', description: 'Compare practicality. Highest value wins.', icon: 'practicality.png' },
+        { title: 'PRICE', description: 'Compare price. Highest value wins.', icon: 'price.png' },
+        { title: 'PRESTIGE', description: 'Compare prestige rank. Highest value wins.', icon: 'ranking.png' }
+      ],
+      actions: [
+        { title: 'SCRAP OPPONENT', description: 'Force opponent to discard one card of their choice.', icon: 'scrap.png' },
+        { title: 'FREE CHOICE', description: 'Player chooses which stat to compare.', icon: 'free_choice.png' },
+        { title: 'STEAL', description: 'Steal one random card from opponent’s garage.', icon: 'steal.png' },
+        { title: 'REVERSE CHALLENGE', description: 'Lowest value wins this round.', icon: 'reverse.png' }
+      ]
+    };
+
+    function startGame() {
+      document.getElementById('welcomeSection').classList.add('hidden');
+      document.getElementById('gameSection').classList.remove('hidden');
+    }
+
+    function drawCard() {
+      const deckCard = document.getElementById('deckCard');
+      const cardImage = document.getElementById('cardImage');
+      deckCard.classList.add('swipe');
+
+      setTimeout(() => {
+        if (drawCard.pendingChallenge) {
+          const card = cards.challenges[Math.floor(Math.random() * cards.challenges.length)];
+          let description = card.description;
+          if (drawCard.reverseActive) {
+            description = 'Compare ' + card.title.toLowerCase() + '. Lowest value wins (Reversed).';
+            drawCard.reverseActive = false;
+          }
+          document.getElementById('cardTitle').textContent = card.title;
+          document.getElementById('cardDescription').textContent = description;
+          cardImage.src = card.icon;
+          drawCard.pendingChallenge = false;
+          deckCard.classList.remove('swipe');
+          return;
+        }
+
+        const isChallenge = Math.random() < 0.8;
+        let card;
+
+        if (isChallenge) {
+          card = cards.challenges[Math.floor(Math.random() * cards.challenges.length)];
+        } else {
+          let availableActions = cards.actions.filter(action => {
+            if (action.title === 'STEAL' && drawCard.cardsDrawn === 0) return false;
+            if (action.title === 'SCRAP OPPONENT' && drawCard.cardsDrawn === 0) return false;
+            return true;
+          });
+          card = availableActions[Math.floor(Math.random() * availableActions.length)];
+          if (card.title === 'REVERSE CHALLENGE') {
+            drawCard.reverseActive = true;
+          }
+          drawCard.pendingChallenge = true;
+        }
+
+        document.getElementById('cardTitle').textContent = card.title;
+        document.getElementById('cardDescription').textContent = card.description;
+        cardImage.src = card.icon;
+        drawCard.cardsDrawn++;
+        deckCard.classList.remove('swipe');
+      }, 500);
+    }
+
+    drawCard.pendingChallenge = false;
+    drawCard.reverseActive = false;
+    drawCard.cardsDrawn = 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('startButton').addEventListener('click', startGame);
+      document.getElementById('nextButton').addEventListener('click', drawCard);
+    });
+  </script>
+</body>
+</html>
