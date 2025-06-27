@@ -36,11 +36,7 @@
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       padding: 20px;
       text-align: center;
-      transition: transform 0.5s ease, opacity 0.5s ease;
-    }
-    .card.swipe {
-      transform: translateX(-100%);
-      opacity: 0;
+      transition: transform 0.5s ease, opacity 0.5s ease, background 0.5s ease;
     }
     .card-title {
       font-size: 1.5rem;
@@ -52,14 +48,18 @@
       margin-bottom: 10px;
     }
     button {
+      width: 80vw;
+      max-width: 300px;
+      height: 60px;
       margin-top: 20px;
       padding: 10px 20px;
-      font-size: 1rem;
+      font-size: 1.2rem;
       background-color: #333;
       color: #fff;
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      align-self: center;
     }
     button:hover {
       background-color: #555;
@@ -81,9 +81,9 @@
 
   <div id="gameSection" class="hidden">
     <div class="card" id="deckCard">
-      <img id="cardImage" class="card-image" src="draw.png" alt="Card Icon">
-      <div class="card-title" id="cardTitle">Draw a Card</div>
-      <div class="card-description" id="cardDescription">Press "Next Card" to start</div>
+      <img id="cardImage" class="card-image" src="" alt="Card Icon">
+      <div class="card-title" id="cardTitle"></div>
+      <div class="card-description" id="cardDescription"></div>
     </div>
     <button id="nextButton">Next Card</button>
   </div>
@@ -105,36 +105,50 @@
     };
 
     function startGame() {
+      drawCard();
       document.getElementById('welcomeSection').classList.add('hidden');
       document.getElementById('gameSection').classList.remove('hidden');
     }
 
     function drawCard() {
       const deckCard = document.getElementById('deckCard');
-      const cardImage = document.getElementById('cardImage');
-      deckCard.classList.add('swipe');
-
+      deckCard.style.transition = 'transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+      deckCard.style.transform = 'rotateY(180deg)';
       setTimeout(() => {
-        if (drawCard.pendingChallenge) {
-          const card = cards.challenges[Math.floor(Math.random() * cards.challenges.length)];
-          let description = card.description;
-          if (drawCard.reverseActive) {
-            description = 'Compare ' + card.title.toLowerCase() + '. Lowest value wins (Reversed).';
-            drawCard.reverseActive = false;
-          }
-          document.getElementById('cardTitle').textContent = card.title;
-          document.getElementById('cardDescription').textContent = description;
-          cardImage.src = card.icon;
-          drawCard.pendingChallenge = false;
-          deckCard.classList.remove('swipe');
-          return;
-        }
+        deckCard.style.transform = 'rotateY(0deg)';
+      }, 400);
+      const cardTitle = document.getElementById('cardTitle');
+      const cardDescription = document.getElementById('cardDescription');
+      const cardImage = document.getElementById('cardImage');
 
+      const gradients = [
+        'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+        'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
+        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        'linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)',
+        'linear-gradient(135deg, #c2e9fb 0%, #a1c4fd 100%)'
+      ];
+      deckCard.style.background = gradients[Math.floor(Math.random() * gradients.length)];
+
+      let card;
+
+      if (drawCard.pendingChallenge) {
+        card = cards.challenges[Math.floor(Math.random() * cards.challenges.length)];
+        let description = card.description;
+        if (drawCard.reverseActive) {
+          description = 'Compare ' + card.title.toLowerCase() + '. Lowest value wins (Reversed).';
+          drawCard.reverseActive = false;
+        }
+        cardTitle.textContent = card.title;
+        cardDescription.textContent = description;
+        cardImage.src = card.icon;
+        drawCard.pendingChallenge = false;
+      } else {
         const isChallenge = Math.random() < 0.8;
-        let card;
 
         if (isChallenge) {
           card = cards.challenges[Math.floor(Math.random() * cards.challenges.length)];
+          drawCard.pendingChallenge = false;
         } else {
           let availableActions = cards.actions.filter(action => {
             if (action.title === 'STEAL' && drawCard.cardsDrawn === 0) return false;
@@ -148,12 +162,12 @@
           drawCard.pendingChallenge = true;
         }
 
-        document.getElementById('cardTitle').textContent = card.title;
-        document.getElementById('cardDescription').textContent = card.description;
+        cardTitle.textContent = card.title;
+        cardDescription.textContent = card.description;
         cardImage.src = card.icon;
-        drawCard.cardsDrawn++;
-        deckCard.classList.remove('swipe');
-      }, 500);
+      }
+
+      drawCard.cardsDrawn++;
     }
 
     drawCard.pendingChallenge = false;
@@ -163,6 +177,8 @@
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('startButton').addEventListener('click', startGame);
       document.getElementById('nextButton').addEventListener('click', drawCard);
+      document.getElementById('deckCard').addEventListener('click', drawCard);
+      document.getElementById('deckCard').addEventListener('touchstart', drawCard);
     });
   </script>
 </body>
