@@ -114,6 +114,7 @@
     }
 
     function drawCard() {
+      let previousCardTitle = drawCard.previousCardTitle || '';
       const deckCard = document.getElementById('deckCard');
       deckCard.style.transition = 'transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
       deckCard.style.transform = 'rotateY(180deg)';
@@ -136,7 +137,9 @@
       let card;
 
       if (drawCard.pendingChallenge) {
-        card = cards.challenges[Math.floor(Math.random() * cards.challenges.length)];
+        do {
+          card = cards.challenges[Math.floor(Math.random() * cards.challenges.length)];
+        } while (card.title === previousCardTitle);
         let description = card.description;
         if (drawCard.reverseActive) {
           description = 'Compare ' + card.title.toLowerCase() + '. Lowest value wins (Reversed).';
@@ -158,7 +161,9 @@
             if (action.title === 'SCRAP OPPONENT' && drawCard.cardsDrawn === 0) return false;
             return true;
           });
-          card = availableActions[Math.floor(Math.random() * availableActions.length)];
+          do {
+            card = availableActions[Math.floor(Math.random() * availableActions.length)];
+          } while (card.title === previousCardTitle);
           if (card.title === 'REVERSE CHALLENGE') {
             drawCard.reverseActive = true;
           }
@@ -171,6 +176,7 @@
       }
 
       drawCard.cardsDrawn++;
+      drawCard.previousCardTitle = card.title;
     }
 
     drawCard.pendingChallenge = false;
@@ -178,6 +184,21 @@
     drawCard.cardsDrawn = 0;
 
     document.addEventListener('DOMContentLoaded', () => {
+      let lastShakeTime = new Date().getTime();
+
+      if (window.DeviceMotionEvent) {
+        window.addEventListener('devicemotion', function (event) {
+          const acc = event.accelerationIncludingGravity;
+          const totalAcceleration = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
+
+          const now = new Date().getTime();
+
+          if (totalAcceleration > 30 && now - lastShakeTime > 1000) {
+            drawCard();
+            lastShakeTime = now;
+          }
+        });
+      }
       document.getElementById('startButton').addEventListener('click', startGame);
       document.getElementById('nextButton').addEventListener('click', drawCard);
       document.getElementById('deckCard').addEventListener('click', drawCard);
